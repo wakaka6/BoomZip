@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	// "runtime"
 
 	"github.com/yeka/zip"
 )
@@ -72,6 +71,9 @@ func unZip(filename string, password string) bool {
 	buffer := new(bytes.Buffer)
 
 	for _, f := range r.File {
+		if f.FileInfo().IsDir() || !f.IsEncrypted() {
+			continue
+		}
 		f.SetPassword(password)
 		r, err := f.Open()
 		if err != nil {
