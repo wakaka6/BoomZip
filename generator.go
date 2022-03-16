@@ -24,19 +24,14 @@ func bruteforceFactory(pwdCh, result chan string, sets ...[]string) string {
 		case pwdCh <- strings.Join(r, ""):
 			continue
 		case pwd := <-result: // return the found password on sucessful
-            wg.Done()
+			wg.Done()
 			return pwd
 		}
 
 	}
 
-	// wait a moment for gorutine execute over
-	select {
-	case pwd := <-result:
-		return pwd
-	case <-time.After(WAITTIME):
-		return ""
-	}
+	//failed on this times
+	return ""
 }
 
 func nextIndex(ix []int, lens func(int) int) {
@@ -67,19 +62,13 @@ func dictionaryFactory(pwdCh, result chan string, filename string) string {
 
 		select {
 		case pwdCh <- string(line):
-            continue
+			continue
 		case pwd := <-result:
-            wg.Done()
+			wg.Done()
 			return pwd
 
 		}
 	}
 
-	// wait a moment for gorutine execute over
-	select {
-	case pwd := <-result:
-		return pwd
-	case <-time.After(WAITTIME):
-		return ""
-	}
+    return ""
 }

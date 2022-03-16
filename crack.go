@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/yeka/zip"
 )
@@ -27,38 +28,44 @@ func findPWD(pwdCh, result chan string) {
 	}
 }
 
-func BruteForce(pwdCh, result chan string, payload []string, min, max int) bool {
+func BruteForce(pwdCh, result chan string, payload []string, min, max int) string {
 	for i := min; i <= max; i++ {
 		var payloads [][]string
 		payloads = genPayloads(payload, i)
 		pwd := bruteforceFactory(pwdCh, result, payloads...)
 		if pwd != "" {
-			OutputResult("Brute-Force", pwd)
-			if output != "" {
-				WritePWD2File(output, zipfile, pwd)
-			}
-			return true
+			return pwd
 		}
 	}
-	OutputResult("Brute-Force", "")
-	return false
+
+	// wait a moment for gorutine execute over when all payload running over.
+	select {
+	case pwd := <-result:
+		return pwd
+	case <-time.After(WAITTIME):
+		return ""
+	}
 }
 
-func DictionaryAttack(pwdCh, result chan string, filename string) bool {
+func DictionaryAttack(pwdCh, result chan string, filename string) string {
 
 	pwd := dictionaryFactory(pwdCh, result, filename)
 
 	if pwd != "" {
-		if pwd != "" {
-			OutputResult("Brute-Force", pwd)
-			if output != "" {
-				WritePWD2File(output, zipfile, pwd)
-			}
-			return true
+		OutputResult("Brute-Force", pwd)
+		if output != "" {
+			WritePWD2File(output, zipfile, pwd)
 		}
+		return pwd
 	}
 
-	return false
+	// wait a moment for gorutine execute over
+	select {
+	case pwd := <-result:
+		return pwd
+	case <-time.After(WAITTIME):
+		return ""
+	}
 }
 
 func unZip(filename string, password string) bool {

@@ -67,7 +67,7 @@ func parseOption() {
 		burst = true // deafult attack method
 	}
 
-	pwdCh := make(chan string)
+	pwdCh := make(chan string, goCount)
 	result := make(chan string, 1)
 	defer close(pwdCh)
 
@@ -78,10 +78,16 @@ func parseOption() {
 	if dictionary != "" {
 		// dictionary-attack first if option -d and -b are set as the same time
 		SayInfo("Start Dictionary Attack....")
-		flag := DictionaryAttack(pwdCh, result, dictionary)
-		if flag {
+		pwd := DictionaryAttack(pwdCh, result, dictionary)
+		if pwd != "" {
+			OutputResult("Dictionary-Attack", pwd)
+			if output != "" {
+				WritePWD2File(output, zipfile, pwd)
+			}
 			return
 		}
+
+		OutputResult("Dictionary-Attack", pwd)
 	}
 
 	if burst {
@@ -115,10 +121,16 @@ func parseOption() {
 
 		// brute-force
 		SayInfo("Start Brute-Force Attack....")
-		flag := BruteForce(pwdCh, result, payload, burstMin, burstMax)
-		if flag {
+		pwd := BruteForce(pwdCh, result, payload, burstMin, burstMax)
+		if pwd != "" {
+			OutputResult("Brute-Force", pwd)
+			if output != "" {
+				WritePWD2File(output, zipfile, pwd)
+			}
 			return
 		}
+
+		OutputResult("Brute-Force", pwd)
 	}
 
 	SayInfo("Not Found the password.(T T)")
